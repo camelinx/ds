@@ -57,7 +57,7 @@ func ( tree *Bst_t )Insert( value interface{ }, comparator Comparator )( count u
 
 func ( tree *Bst_t )findNode( value interface{ }, comparator Comparator )( node *BstNode_t, err error ) {
     if nil == tree || nil == tree.Root {
-        return nil, fmt.Errorf( "failed to insert into nil tree" )
+        return nil, fmt.Errorf( "failed to find in nil tree" )
     }
 
     cur := tree.Root
@@ -119,6 +119,13 @@ func ( tree *Bst_t )removeLeafNode( node *BstNode_t )( err error ) {
         return fmt.Errorf( "%v not a leaf node", node )
     }
 
+    if 1 == tree.Count && node == tree.Root {
+        tree.Root  = nil
+        tree.Count = 0
+
+        return nil
+    }
+
     if nil == node.Parent {
         return fmt.Errorf( "%v has no parent reference", node )
     }
@@ -139,7 +146,11 @@ func ( tree *Bst_t )removeLeafNode( node *BstNode_t )( err error ) {
 func ( tree *Bst_t )Delete( value interface{ }, comparator Comparator )( count uint, err error ) {
     node, err := tree.findNode( value, comparator )
     if nil != err || nil == node {
-        return tree.Count, err
+        if nil != tree {
+            return tree.Count, err
+        }
+
+        return 0, err
     }
 
     neighbor, err := tree.findNeighbor( node, comparator )
