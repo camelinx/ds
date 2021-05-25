@@ -8,12 +8,52 @@ func Init( )( tree *Bst_t ) {
     return &Bst_t{ Root : nil, Count : 0 }
 }
 
+func InitWithHandlers( ctx interface{ }, rlock_handler Rlock, wlock_handler Wlock, unlock_handler Unlock )( tree *Bst_t ) {
+    tree = Init( )
+
+    tree.SetLockHandlers( ctx, rlock_handler, wlock_handler, unlock_handler )
+
+    return tree
+}
+
+func ( tree *Bst_t )SetLockHandlers( ctx interface{ }, rlock_handler Rlock, wlock_handler Wlock, unlock_handler Unlock )( ) {
+    if nil == tree {
+        return
+    }
+
+    tree.Ctx            = ctx
+    tree.Rlock_handler  = rlock_handler
+    tree.Wlock_handler  = wlock_handler
+    tree.Unlock_handler = unlock_handler
+}
+
+func ( tree *Bst_t )rlock( )( ) {
+    if nil != tree && nil != tree.Rlock_handler {
+        tree.Rlock_handler( tree.Ctx )
+    }
+}
+
+func ( tree *Bst_t )wlock( )( ) {
+    if nil != tree && nil != tree.Wlock_handler {
+        tree.Wlock_handler( tree.Ctx )
+    }
+}
+
+func ( tree *Bst_t )unlock( )( ) {
+    if nil != tree && nil != tree.Unlock_handler {
+        tree.Unlock_handler( tree.Ctx )
+    }
+}
+
 func ( tree *Bst_t )Insert( value interface{ }, comparator Comparator )( count uint, err error ) {
     if nil == tree {
         return 0, fmt.Errorf( "failed to insert into nil tree" )
     }
 
     new := &BstNode_t{ Value : value }
+
+    tree.wlock( )
+    defer tree.unlock( )
 
     if nil == tree.Root {
         tree.Root  = new
@@ -55,6 +95,7 @@ func ( tree *Bst_t )Insert( value interface{ }, comparator Comparator )( count u
     return tree.Count, nil
 }
 
+// Must be called with the lock held
 func ( tree *Bst_t )findNode( value interface{ }, comparator Comparator )( node *BstNode_t, err error ) {
     if nil == tree || nil == tree.Root {
         return nil, fmt.Errorf( "failed to find in nil tree" )
@@ -79,6 +120,7 @@ func ( tree *Bst_t )findNode( value interface{ }, comparator Comparator )( node 
     return nil, nil
 }
 
+// Must be called with the lock held
 // For leaf nodes, parent is the neighbor
 // For intermediate nodes, if right sub tree exists, left most child of right sub tree else the right most child of left sub tree
 func ( tree *Bst_t )findNeighbor( node *BstNode_t, comparator Comparator )( neighbor *BstNode_t, err error ) {
@@ -106,6 +148,9 @@ func ( tree *Bst_t )findNeighbor( node *BstNode_t, comparator Comparator )( neig
 }
 
 func ( tree *Bst_t )Search( value interface{ }, comparator Comparator )( found bool, err error ) {
+    tree.rlock( )
+    defer tree.unlock( )
+
     node, err := tree.findNode( value, comparator )
     if nil == err && nil != node {
         return true, nil
@@ -114,6 +159,7 @@ func ( tree *Bst_t )Search( value interface{ }, comparator Comparator )( found b
     return false, err
 }
 
+// Must be called with the lock held
 func ( tree *Bst_t )removeLeafNode( node *BstNode_t )( err error ) {
     if nil != node.Left || nil != node.Right {
         return fmt.Errorf( "%v not a leaf node", node )
@@ -144,6 +190,9 @@ func ( tree *Bst_t )removeLeafNode( node *BstNode_t )( err error ) {
 }
 
 func ( tree *Bst_t )Delete( value interface{ }, comparator Comparator )( count uint, err error ) {
+    tree.wlock( )
+    defer tree.unlock( )
+
     node, err := tree.findNode( value, comparator )
     if nil != err || nil == node {
         if nil != tree {
