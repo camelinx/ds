@@ -8,28 +8,35 @@ func Init( )( stack *Stack_t ) {
     return &Stack_t{ }
 }
 
-func InitWithHandlers( ctx interface{ }, rlock_handler Rlock, wlock_handler Wlock, unlock_handler Unlock )( stack *Stack_t ) {
+func InitWithHandlers( ctx interface{ }, rlock_handler Rlock, runlock_handler Runlock, wlock_handler Wlock, unlock_handler Unlock )( stack *Stack_t ) {
     stack = Init( )
 
-    stack.SetLockHandlers( ctx, rlock_handler, wlock_handler, unlock_handler )
+    stack.SetLockHandlers( ctx, rlock_handler, runlock_handler, wlock_handler, unlock_handler )
 
     return stack
 }
 
-func ( stack *Stack_t )SetLockHandlers( ctx interface{ }, rlock_handler Rlock, wlock_handler Wlock, unlock_handler Unlock )( ) {
+func ( stack *Stack_t )SetLockHandlers( ctx interface{ }, rlock_handler Rlock, runlock_handler Runlock, wlock_handler Wlock, unlock_handler Unlock )( ) {
     if nil == stack {
         return
     }
 
-    stack.Ctx            = ctx
-    stack.Rlock_handler  = rlock_handler
-    stack.Wlock_handler  = wlock_handler
-    stack.Unlock_handler = unlock_handler
+    stack.Ctx             = ctx
+    stack.Rlock_handler   = rlock_handler
+    stack.Runlock_handler = runlock_handler
+    stack.Wlock_handler   = wlock_handler
+    stack.Unlock_handler  = unlock_handler
 }
 
 func ( stack *Stack_t )rlock( )( ) {
     if nil != stack && nil != stack.Rlock_handler {
         stack.Rlock_handler( stack.Ctx )
+    }
+}
+
+func ( stack *Stack_t )runlock( )( ) {
+    if nil != stack && nil != stack.Runlock_handler {
+        stack.Runlock_handler( stack.Ctx )
     }
 }
 
@@ -43,6 +50,10 @@ func ( stack *Stack_t )unlock( )( ) {
     if nil != stack && nil != stack.Unlock_handler {
         stack.Unlock_handler( stack.Ctx )
     }
+}
+
+func ( stack *Stack_t )IsEmpty( )( bool ) {
+    return nil != stack && len( stack.Values ) == 0
 }
 
 func ( stack *Stack_t )Push( value interface{ } )( nelems int, err error ) {
@@ -84,7 +95,7 @@ func ( stack *Stack_t )Peek( )( value interface{ }, err error ) {
     }
 
     stack.rlock( )
-    defer stack.unlock( )
+    defer stack.runlock( )
 
     length := len( stack.Values )
 
