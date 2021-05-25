@@ -4,6 +4,7 @@ type BstNodeIterator func( interface{ }, interface{ } )( error )
 type Comparator func( interface{ }, interface{ } )( int8, error )
 
 type Rlock func( interface{ } )( )
+type Runlock func( interface{ } )( )
 type Wlock func( interface{ } )( )
 type Unlock func( interface{ } )( )
 
@@ -21,6 +22,7 @@ type Bst_t struct {
 
     Ctx              interface{ }
     Rlock_handler    Rlock
+    Runlock_handler  Runlock
     Wlock_handler    Wlock
     Unlock_handler   Unlock
 }

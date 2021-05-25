@@ -8,28 +8,35 @@ func Init( )( tree *Bst_t ) {
     return &Bst_t{ Root : nil, Count : 0 }
 }
 
-func InitWithHandlers( ctx interface{ }, rlock_handler Rlock, wlock_handler Wlock, unlock_handler Unlock )( tree *Bst_t ) {
+func InitWithHandlers( ctx interface{ }, rlock_handler Rlock, runlock_handler Runlock, wlock_handler Wlock, unlock_handler Unlock )( tree *Bst_t ) {
     tree = Init( )
 
-    tree.SetLockHandlers( ctx, rlock_handler, wlock_handler, unlock_handler )
+    tree.SetLockHandlers( ctx, rlock_handler, runlock_handler, wlock_handler, unlock_handler )
 
     return tree
 }
 
-func ( tree *Bst_t )SetLockHandlers( ctx interface{ }, rlock_handler Rlock, wlock_handler Wlock, unlock_handler Unlock )( ) {
+func ( tree *Bst_t )SetLockHandlers( ctx interface{ }, rlock_handler Rlock, runlock_handler Runlock, wlock_handler Wlock, unlock_handler Unlock )( ) {
     if nil == tree {
         return
     }
 
-    tree.Ctx            = ctx
-    tree.Rlock_handler  = rlock_handler
-    tree.Wlock_handler  = wlock_handler
-    tree.Unlock_handler = unlock_handler
+    tree.Ctx              = ctx
+    tree.Rlock_handler    = rlock_handler
+    tree.Runlock_handler  = runlock_handler
+    tree.Wlock_handler    = wlock_handler
+    tree.Unlock_handler   = unlock_handler
 }
 
 func ( tree *Bst_t )rlock( )( ) {
     if nil != tree && nil != tree.Rlock_handler {
         tree.Rlock_handler( tree.Ctx )
+    }
+}
+
+func ( tree *Bst_t )runlock( )( ) {
+    if nil != tree && nil != tree.Runlock_handler {
+        tree.Runlock_handler( tree.Ctx )
     }
 }
 
@@ -149,7 +156,7 @@ func ( tree *Bst_t )findNeighbor( node *BstNode_t, comparator Comparator )( neig
 
 func ( tree *Bst_t )Search( value interface{ }, comparator Comparator )( found bool, err error ) {
     tree.rlock( )
-    defer tree.unlock( )
+    defer tree.runlock( )
 
     node, err := tree.findNode( value, comparator )
     if nil == err && nil != node {
