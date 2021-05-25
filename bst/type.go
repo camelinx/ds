@@ -1,6 +1,6 @@
 package bst
 
-type BstNodeIterator func( interface{ }, interface{ } )( error )
+type BstNodeCallback func( interface{ }, interface{ } )( error )
 type Comparator func( interface{ }, interface{ } )( int8, error )
 
 type Rlock func( interface{ } )( )
