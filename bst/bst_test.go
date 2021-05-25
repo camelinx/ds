@@ -39,17 +39,10 @@ const (
     max_tree_nodes = 31
 )
 
-func TestInsert( t *testing.T ) {
-    tree := Init( )
-    if nil == tree || nil != tree.Root || 0 != tree.Count {
-        t.Errorf( "tree returned by init %+v not initialized", tree )
-    }
-
+func ( tree *Bst_t )insertToTree( t *testing.T, withDup bool )( values map[ uint ]bool ) {
     rand.Seed( time.Now( ).UnixNano( ) )
 
-    values := make( map[ uint ]bool )
-
-    var err error
+    values = make( map[ uint ]bool )
 
     for i := 0; i < max_tree_nodes; i++ {
         value := uint( rand.Intn( max_tree_val ) )
@@ -81,13 +74,26 @@ func TestInsert( t *testing.T ) {
             t.Errorf( "failed to insert into tree %+v", tree )
         }
 
-        count, err = tree.Insert( value, comparator )
-        if nil != err || uint( i + 1 ) != count || count != tree.Count {
-            t.Errorf( "failed to insert into tree %+v", tree )
+        if withDup {
+            count, err = tree.Insert( value, comparator )
+            if nil != err || uint( i + 1 ) != count || count != tree.Count {
+                t.Errorf( "failed to insert (duplicate) into tree %+v", tree )
+            }
         }
     }
 
-    _, err = tree.Insert( "hello", comparator )
+    return values
+}
+
+func TestInsert( t *testing.T ) {
+    tree := Init( )
+    if nil == tree || nil != tree.Root || 0 != tree.Count {
+        t.Errorf( "tree returned by init %+v not initialized", tree )
+    }
+
+    tree.insertToTree( t, true )
+
+    _, err := tree.Insert( "hello", comparator )
     if nil == err {
         t.Errorf( "successfully inserted a string into a binary search tree %+v of unsigned integers", tree )
     }
@@ -109,49 +115,7 @@ func TestInsert( t *testing.T ) {
     }
 }
 
-func TestSearch( t *testing.T ) {
-    tree := Init( )
-    if nil == tree || nil != tree.Root || 0 != tree.Count {
-        t.Errorf( "tree returned by init %+v not initialized", tree )
-    }
-
-    rand.Seed( time.Now( ).UnixNano( ) )
-
-    values := make( map[ uint ]bool )
-
-    var err error
-
-    for i := 0; i < max_tree_nodes; i++ {
-        value := uint( rand.Intn( max_tree_val ) )
-        if _, exists := values[ value ]; exists {
-            new_value := value + 1
-            for new_value != value {
-                if _, exists = values[ new_value ]; !exists {
-                    break
-                }
-
-                if max_tree_val == new_value {
-                    new_value = 0
-                } else {
-                    new_value++
-                }
-            }
-
-            if new_value == value {
-                t.Errorf( "failed to find unique value to insert into tree %+v", tree )
-            }
-
-            value = new_value
-        }
-
-        values[ value ] = true
-
-        count, err := tree.Insert( value, comparator )
-        if nil != err || uint( i + 1 ) != count || count != tree.Count {
-            t.Errorf( "failed to insert into tree %+v", tree )
-        }
-    }
-
+func( tree *Bst_t )searchInTree( t *testing.T, values map[ uint ]bool ) {
     for i := uint( 0 ); i < max_tree_val; i++ {
         found, err := tree.Search( i, comparator )
         if err != nil {
@@ -168,8 +132,19 @@ func TestSearch( t *testing.T ) {
             }
         }
     }
+}
 
-    _, err = tree.Search( "hello", comparator )
+func TestSearch( t *testing.T ) {
+    tree := Init( )
+    if nil == tree || nil != tree.Root || 0 != tree.Count {
+        t.Errorf( "tree returned by init %+v not initialized", tree )
+    }
+
+    values := tree.insertToTree( t, false )
+
+    tree.searchInTree( t, values )
+
+    _, err := tree.Search( "hello", comparator )
     if err == nil {
         t.Errorf( "successfully searched a string in a tree %+v of unsigned integers", tree )
     }
@@ -186,49 +161,7 @@ func TestSearch( t *testing.T ) {
     }
 }
 
-func TestDelete( t *testing.T ) {
-    tree := Init( )
-    if nil == tree || nil != tree.Root || 0 != tree.Count {
-        t.Errorf( "tree returned by init %+v not initialized", tree )
-    }
-
-    rand.Seed( time.Now( ).UnixNano( ) )
-
-    values := make( map[ uint ]bool )
-
-    var err error
-
-    for i := 0; i < max_tree_nodes; i++ {
-        value := uint( rand.Intn( max_tree_val ) )
-        if _, exists := values[ value ]; exists {
-            new_value := value + 1
-            for new_value != value {
-                if _, exists = values[ new_value ]; !exists {
-                    break
-                }
-
-                if max_tree_val == new_value {
-                    new_value = 0
-                } else {
-                    new_value++
-                }
-            }
-
-            if new_value == value {
-                t.Errorf( "failed to find unique value to insert into tree %+v", tree )
-            }
-
-            value = new_value
-        }
-
-        values[ value ] = true
-
-        count, err := tree.Insert( value, comparator )
-        if nil != err || uint( i + 1 ) != count || count != tree.Count {
-            t.Errorf( "failed to insert into tree %+v", tree )
-        }
-    }
-
+func ( tree *Bst_t )deleteFromTree( t *testing.T, values map[ uint ]bool ) {
     fCount := tree.Count
 
     for i := uint( 0 ); i < max_tree_val; i++ {
@@ -249,8 +182,19 @@ func TestDelete( t *testing.T ) {
             }
         }
     }
+}
 
-    _, err = tree.Delete( "hello", comparator )
+func TestDelete( t *testing.T ) {
+    tree := Init( )
+    if nil == tree || nil != tree.Root || 0 != tree.Count {
+        t.Errorf( "tree returned by init %+v not initialized", tree )
+    }
+
+    values := tree.insertToTree( t, false )
+
+    tree.deleteFromTree( t, values )
+
+    _, err := tree.Delete( "hello", comparator )
     if err == nil {
         t.Errorf( "successfully deleted a string from tree %+v of unsigned integers", tree )
     }
