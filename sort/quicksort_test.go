@@ -31,9 +31,13 @@ func testQsortOnce( t *testing.T ) {
     max_elems := rand.Intn( 256 )
 
     values := [ ]int{ }
+    lookup := make( map[ int ]bool )
 
     for i := 0; i < max_elems; i++ {
-        values = append( values, rand.Intn( 256 ) )
+        value  := rand.Intn( 256 )
+        values  = append( values, value )
+
+        lookup[ value ] = true
     }
 
     result, err := Qsort( values, qsort_comparator )
@@ -41,9 +45,18 @@ func testQsortOnce( t *testing.T ) {
         t.Errorf( "failed to sort" )
     }
 
+    if len( result ) != len( values ) {
+        t.Errorf( "incorrect sort - length mismatch" )
+        return
+    }
+
     for i := 0; i < ( len( result ) - 1 ); i++ {
+        if _, exists := lookup[ result[ i ].( int ) ]; !exists {
+            t.Errorf( "incorrect sort - unexpected value in returned list" )
+            break
+        }
+
         if result[ i ].( int ) > result[ i + 1 ].( int ) {
-            t.Logf( "%+v\n", values )
             t.Errorf( "incorrect sort" )
             break
         }
