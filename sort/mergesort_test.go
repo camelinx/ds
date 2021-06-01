@@ -7,7 +7,7 @@ import (
     "math/rand"
 )
 
-func qsort_comparator( a interface{ }, b interface{ } )( result int8, err error ) {
+func msort_comparator( a interface{ }, b interface{ } )( result int8, err error ) {
     aval, ok := a.( int )
     if !ok {
         return 0, fmt.Errorf( "unsupported value type" )
@@ -27,7 +27,7 @@ func qsort_comparator( a interface{ }, b interface{ } )( result int8, err error 
     return -1, nil
 }
 
-func testQsortOnce( t *testing.T ) {
+func testMSortOnce( t *testing.T ) {
     max_elems := rand.Intn( 256 )
 
     values := [ ]int{ }
@@ -36,26 +36,26 @@ func testQsortOnce( t *testing.T ) {
         values = append( values, rand.Intn( 256 ) )
     }
 
-    result, err := Qsort( values, qsort_comparator )
+    result, err := MSort( values, msort_comparator )
     if nil != err {
         t.Errorf( "failed to sort" )
     }
 
     for i := 0; i < ( len( result ) - 1 ); i++ {
         if result[ i ].( int ) > result[ i + 1 ].( int ) {
-            t.Logf( "%+v\n", values )
+            t.Logf( "%+v\n", result )
             t.Errorf( "incorrect sort" )
             break
         }
     }
 }
 
-func TestQsort( t *testing.T ) {
+func TestMSort( t *testing.T ) {
     rand.Seed( time.Now( ).UnixNano( ) )
 
     iters := rand.Intn( 16 )
 
     for i := 0; i < iters; i++ {
-        testQsortOnce( t )
+        testMSortOnce( t )
     }
 }

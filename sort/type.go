@@ -9,3 +9,8 @@ const (
 
     Descending  SortOrder   = 1
 )
+
+type part_t struct {
+    start   int
+    end     int
+}

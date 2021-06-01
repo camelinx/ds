@@ -2,24 +2,9 @@ package sort
 
 import (
     "fmt"
-    "reflect"
 
     "github.com/ds/stack"
 )
-
-type part_t struct {
-    start   int
-    end     int
-}
-
-func convertArgToSlice( arg interface{ } )( val reflect.Value, ok bool ) {
-    val = reflect.ValueOf( arg )
-    if reflect.Slice == val.Kind( ) {
-        ok = true
-    }
-
-    return val, ok
-}
 
 func Qsort( arg interface{ }, compare Comparator )( result [ ]interface{ }, err error ) {
     if nil == compare || nil == arg {
