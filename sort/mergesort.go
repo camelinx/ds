@@ -8,18 +8,27 @@ func mergeParts( arg [ ]interface{ }, compare Comparator, part1 part_t, part2 pa
     var result [ ]interface{ }
 
     i := part1.start
+    if i > part2.start {
+        i = part2.start
+    }
 
     for part1.start <= part1.end || part2.start <= part2.end {
         if part1.start > part1.end {
-            result = append( result, arg[ part2.start ] )
-            part2.start++
-            continue
+            for part2.start <= part2.end {
+                result = append( result, arg[ part2.start ] )
+                part2.start++
+            }
+
+            break
         }
 
         if part2.start > part2.end {
-            result = append( result, arg[ part1.start ] )
-            part1.start++
-            continue
+            for part1.start <= part1.end {
+                result = append( result, arg[ part1.start ] )
+                part1.start++
+            }
+
+            break
         }
 
         cmp, err := compare( arg[ part1.start ], arg[ part2.start ] )
@@ -28,13 +37,12 @@ func mergeParts( arg [ ]interface{ }, compare Comparator, part1 part_t, part2 pa
         }
 
         if cmp > 0 {
-            result = append( result, arg[ part2.start ], arg[ part1.start ] )
+            result = append( result, arg[ part2.start ] )
+            part2.start++
         } else {
-            result = append( result, arg[ part1.start ], arg[ part2.start ] )
+            result = append( result, arg[ part1.start ] )
+            part1.start++
         }
-
-        part1.start++
-        part2.start++
     }
 
     for _, elem := range result {
